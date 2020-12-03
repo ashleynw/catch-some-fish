@@ -1,11 +1,8 @@
 namespace SpriteKind {
     export const Fish = SpriteKind.create()
-    export const Lure = SpriteKind.create()
-    export const Reel = SpriteKind.create()
     export const CatchingLure = SpriteKind.create()
-    export const FakeFish = SpriteKind.create()
+    export const SwimmingFish = SpriteKind.create()
     export const CaughtFish = SpriteKind.create()
-    export const Camera = SpriteKind.create()
 }
 let titleScreen = sprites.create(img`
     ................................................................................................................................................................
