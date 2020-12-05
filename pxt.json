@@ -1,5 +1,5 @@
 {
-    "name": "catch-some-fish-starter",
+    "name": "catch-some-fish",
     "description": "",
     "dependencies": {
         "device": "*",
@@ -28,5 +28,5 @@
     "supportedTargets": [
         "arcade"
     ],
-    "preferredEditor": "tsprj"
+    "preferredEditor": "blocksprj"
 }

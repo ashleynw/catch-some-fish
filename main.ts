@@ -3,7 +3,11 @@ namespace SpriteKind {
     export const SwimmingFish = SpriteKind.create()
     export const CaughtFish = SpriteKind.create()
 }
-
+// When lure is reeled to surface of water
+scene.onOverlapTile(SpriteKind.CatchingLure, myTiles.transparency16, function (sprite, location) {
+    sprite.setVelocity(0, 0)
+    checkCatch()
+})
 // Intro sequence to pan down and drop lure
 function introSequence () {
     lure = sprites.create(img`
@@ -36,42 +40,6 @@ function introSequence () {
         canReel = true
     })
 }
-
-function spawnFish (numFish: number) {
-    for (let index = 0; index < numFish; index++) {
-        randomFishIndex = randint(0, fishImgs.length - 1)
-        newFish = sprites.create(fishImgs[randomFishIndex], SpriteKind.SwimmingFish)
-        newFish.setFlag(SpriteFlag.BounceOnWall, true)
-        tiles.placeOnRandomTile(newFish, myTiles.tile4)
-        
-        direction = randint(0, 1)
-
-        // Swim right
-        if (direction == 0) {
-            newFish.setVelocity(randint(10, 20), 0)
-        }
-        // Swim left
-        else {
-            newFish.setVelocity(randint(-20, -10), 0)
-        }
-
-        // Store left and right images
-        leftImg = fishImgs[randomFishIndex].clone()
-        leftImg.flipX()
-        sprites.setDataImage(newFish, "swim-right", fishImgs[randomFishIndex])
-        sprites.setDataImage(newFish, "swim-left", leftImg)
-
-        // Store points
-        sprites.setDataNumber(newFish, "points", fishPoints[randomFishIndex])
-    }
-}
-
-// When lure is reeled to surface of water
-scene.onOverlapTile(SpriteKind.CatchingLure, myTiles.transparency16, function (sprite, location) {
-    sprite.setVelocity(0, 0)
-    checkCatch()
-})
-
 // Add up points and present fish
 function checkCatch () {
     lure.destroy()
@@ -94,7 +62,6 @@ function checkCatch () {
         game.over(true)
     })
 }
-
 // Reel in lure
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     if (canReel) {
@@ -102,7 +69,29 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
         lure.setKind(SpriteKind.CatchingLure)
     }
 })
-
+function spawnFish (numFish: number) {
+    for (let index = 0; index < numFish; index++) {
+        randomFishIndex = randint(0, fishImgs.length - 1)
+        newFish = sprites.create(fishImgs[randomFishIndex], SpriteKind.SwimmingFish)
+        newFish.setFlag(SpriteFlag.BounceOnWall, true)
+        tiles.placeOnRandomTile(newFish, myTiles.tile4)
+        direction = randint(0, 1)
+        // Swim right
+        // Swim left
+        if (direction == 0) {
+            newFish.setVelocity(randint(10, 20), 0)
+        } else {
+            newFish.setVelocity(randint(-20, -10), 0)
+        }
+        // Store left and right images
+        leftImg = fishImgs[randomFishIndex].clone()
+        leftImg.flipX()
+        sprites.setDataImage(newFish, "swim-right", fishImgs[randomFishIndex])
+sprites.setDataImage(newFish, "swim-left", leftImg)
+// Store points
+        sprites.setDataNumber(newFish, "points", fishPoints[randomFishIndex])
+    }
+}
 // Catch fish when reeling in
 sprites.onOverlap(SpriteKind.CatchingLure, SpriteKind.SwimmingFish, function (sprite, otherSprite) {
     otherSprite.follow(sprite)
@@ -118,10 +107,10 @@ let canReel = false
 let lure: Sprite = null
 let lureImg: Image = null
 let fishPoints: number[] = []
-let newFish: Sprite = null
-let randomFishIndex = 0
-let fishImgs: Image[] = []
 let leftImg: Image = null
+let fishImgs: Image[] = []
+let randomFishIndex = 0
+let newFish: Sprite = null
 let titleScreen = sprites.create(img`
     ................................................................................................................................................................
     ................................................................................................................................................................
@@ -620,7 +609,6 @@ lureImg = img`
     `
 introSequence()
 spawnFish(20)
-
 // Update image to match swim direction
 game.onUpdate(function () {
     allSwimming = sprites.allOfKind(SpriteKind.SwimmingFish)
