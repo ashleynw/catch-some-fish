@@ -1,9 +1,117 @@
 namespace SpriteKind {
-    export const Fish = SpriteKind.create()
     export const CatchingLure = SpriteKind.create()
     export const SwimmingFish = SpriteKind.create()
     export const CaughtFish = SpriteKind.create()
 }
+
+scene.onOverlapTile(SpriteKind.CatchingLure, myTiles.transparency16, function (sprite, location) {
+    sprite.setVelocity(0, 0)
+    checkCatch()
+})
+
+function checkCatch(){
+    lure.destroy()
+    let allCaught = sprites.allOfKind(SpriteKind.CaughtFish)
+
+    let sum = 0
+    for (let fish of allCaught){
+        sum += sprites.readDataNumber(fish, "points")
+
+        story.queueStoryPart(function() {
+            story.spriteMoveToLocation(fish, 80, 150, 50)
+        })
+        story.queueStoryPart(function() {
+            fish.say("" + sprites.readDataNumber(fish, "points"))
+        })
+        story.queueStoryPart(function() {
+            pause(1000)
+            fish.destroy()
+        })
+    }
+
+    story.queueStoryPart(function() {
+        info.setScore(sum)
+        game.over(true)
+    })
+}
+
+// Intro sequence
+function introSequence () {
+    lure = sprites.create(img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        `, SpriteKind.Player)
+    scene.cameraFollowSprite(lure)
+    story.queueStoryPart(function () {
+        story.spriteMoveToLocation(lure, 80, 170, 30)
+    })
+    story.queueStoryPart(function () {
+        lure.setImage(lureImg)
+        lure.startEffect(effects.bubbles, 500)
+        lure.setVelocity(0, 50)
+        controller.moveSprite(lure, 50, 0)
+        canReel = true
+    })
+}
+controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (canReel) {
+        lure.setVelocity(0, -100)
+        lure.setKind(SpriteKind.CatchingLure)
+    }
+})
+function spawnFish (numFish: number) {
+    for (let index = 0; index < numFish; index++) {
+        randomFishIndex = randint(0, fishImgs.length - 1)
+        newFish = sprites.create(fishImgs[randomFishIndex], SpriteKind.SwimmingFish)
+        newFish.setFlag(SpriteFlag.BounceOnWall, true)
+        tiles.placeOnRandomTile(newFish, myTiles.tile4)
+        direction = randint(0, 1)
+        // Swim right
+        // Swim left
+        if (direction == 0) {
+            newFish.setVelocity(randint(10, 20), 0)
+        } else {
+            newFish.setVelocity(randint(-20, -10), 0)
+        }
+        // Store left and right images
+        leftImg = fishImgs[randomFishIndex].clone()
+        leftImg.flipX()
+        sprites.setDataImage(newFish, "swim-right", fishImgs[randomFishIndex])
+sprites.setDataImage(newFish, "swim-left", leftImg)
+// Store points
+        sprites.setDataNumber(newFish, "points", fishPoints[randomFishIndex])
+    }
+}
+sprites.onOverlap(SpriteKind.CatchingLure, SpriteKind.SwimmingFish, function (sprite, otherSprite) {
+    otherSprite.follow(sprite)
+    otherSprite.setKind(SpriteKind.CaughtFish)
+})
+let leftImg2: Image = null
+let rightImg: Image = null
+let allSwimming: Sprite[] = []
+let leftImg: Image = null
+let direction = 0
+let canReel = false
+let lure: Sprite = null
+let lureImg: Image = null
+let fishPoints: number[] = []
+let fishImgs: Image[] = []
+let randomFishIndex = 0
+let newFish: Sprite = null
 let titleScreen = sprites.create(img`
     ................................................................................................................................................................
     ................................................................................................................................................................
@@ -248,58 +356,7 @@ scene.setBackgroundImage(img`
     bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
     bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
     `)
-tiles.setTilemap(tiles.createTilemap(hex`0a0032000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000020404040404040404030204040404040404040302040404040404040403020404040404040404030204040404040404040302040404040404040403020404040404040404030204040404040404040302040404040404040403020404040404040404030204040404040404040302040404040404040403020404040404040404030204040404040404040302040404040404040403020404040404040404030204040404040404040302040404040404040403020404040404040404030204040404040404040302040404040404040403020404040404040404030204040404040404040302040404040404040403020404040404040404030204040404040404040302040404040404040403020404040404040404030204040404040404040302040404040404040403020404040404040404030204040404040404040302040404040404040403020404040404040404030204040404040404040302040404040404040403020404040404040404030204040404040404040302040404040404040403`, img`
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    ..........
-    `, [myTiles.transparency16,myTiles.tile1,myTiles.tile2,myTiles.tile3,myTiles.tile4], TileScale.Sixteen))
+tiles.setTilemap(tilemap`level_0`)
 let fishingCat = sprites.create(img`
     4......848..........eeee
     4.....84488.......ee....
@@ -319,7 +376,7 @@ let fishingCat = sprites.create(img`
     ..422222222.............
     `, SpriteKind.Player)
 tiles.placeOnRandomTile(fishingCat, myTiles.tile1)
-let fishImgs = [
+fishImgs = [
 img`
     ..................
     ..................
@@ -531,7 +588,7 @@ img`
     ........................................
     `
 ]
-let fishPoints = [
+fishPoints = [
 5,
 10,
 20,
@@ -541,7 +598,7 @@ let fishPoints = [
 1,
 1
 ]
-let lureImg = img`
+lureImg = img`
     . . c . . c . . 
     . . c . c c c . 
     . . c . . c . . 
@@ -551,3 +608,20 @@ let lureImg = img`
     . 2 2 c . c . . 
     . . . . c . . . 
     `
+introSequence()
+spawnFish(20)
+// Update image to match swim direction
+game.onUpdate(function () {
+    allSwimming = sprites.allOfKind(SpriteKind.SwimmingFish)
+    for (let fish of allSwimming) {
+        // Swimming right
+        // Swimming left
+        if (fish.vx > 0) {
+            rightImg = sprites.readDataImage(fish, "swim-right")
+            fish.setImage(rightImg)
+        } else {
+            leftImg2 = sprites.readDataImage(fish, "swim-left")
+            fish.setImage(leftImg2)
+        }
+    }
+})
